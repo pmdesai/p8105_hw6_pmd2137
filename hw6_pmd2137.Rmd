@@ -215,40 +215,63 @@ city_odds_male_solved %>%
 ```
 From this graph, we can see that the odds of solving a homicide where the victim is male is less than 1 in most city, states across the United States. This means that the odds of solving a homicide case where the victim is male case is lower than than the odds of solving a homicide case where the victim is female (all else being equal) in most Cities with homicides. Some notable exceptions are Nashville, TN; Fresno, CA; Stockton, CA; and Albuquerque, NM where the odds of solving a homicide if the vicitim is female is lower than if the victim is male.
 
-## Problem 3:
+## Problem 3: Birthweights
 
-In this problem, you will analyze data gathered to understand the effects of several variables on a child's birthweight. This dataset, available here, consists of roughly 4000 children and includes the following variables:
+In this problem, we assess a birthweight dataset to understand factors that impact a child's birthweight. This dataset, consists of roughly 4000 children and includes the following variables:
+
+  `babysex`: baby’s sex (male = 1, female = 2)
+  `bhead`: baby’s head circumference at birth (centimeters)
+  `blength`: baby’s length at birth (centimeteres)
+  `bwt`: baby’s birth weight (grams)
+  `delwt`: mother’s weight at delivery (pounds)
+  `fincome`: family monthly income (in hundreds, rounded)
+  `frace`: father’s race (1 = White, 2 = Black, 3 = Asian, 4 = Puerto Rican, 8 = Other, 9 = Unknown)
+  `gaweeks`: gestational age in weeks
+  `malform`: presence of malformations that could affect weight (0 = absent, 1 = present)
+  `menarche`: mother’s age at menarche (years)
+  `mheigth`: mother’s height (inches)
+  `momage`: mother’s age at delivery (years)
+  `mrace`: mother’s race (1 = White, 2 = Black, 3 = Asian, 4 = Puerto Rican, 8 = Other)
+  `parity`: number of live births prior to this pregnancy
+  `pnumlbw`: previous number of low birth weight babies
+  `pnumgsa`: number of prior small for gestational age babies
+  `ppbmi`: mother’s pre-pregnancy BMI
+  `ppwt`: mother’s pre-pregnancy weight (pounds)
+  `smoken`: average number of cigarettes smoked per day during pregnancy
+  `wtgain`: mother’s weight gain during pregnancy (pounds)
+
+Load and clean the data for regression analysis (i.e. convert numeric to factor where appropriate, check for missing data, etc.)
 
 ```{r}
-birthweight <- read.csv("data/birthweight.csv") 
+birthweight <- read.csv("data/birthweight.csv") %>%
+  
+  #convert categorical variables to factors
+  mutate( babysex = as.factor(babysex),
+    malform = as.factor(malform),
+    frace = as.factor(frace),
+    mrace = as.factor(mrace))
 ```
 
-        babysex: baby’s sex (male = 1, female = 2)
-        bhead: baby’s head circumference at birth (centimeters)
-        blength: baby’s length at birth (centimeteres)
-        bwt: baby’s birth weight (grams)
-        delwt: mother’s weight at delivery (pounds)
-        fincome: family monthly income (in hundreds, rounded)
-        frace: father’s race (1 = White, 2 = Black, 3 = Asian, 4 = Puerto Rican, 8 = Other, 9 = Unknown)
-        gaweeks: gestational age in weeks
-        malform: presence of malformations that could affect weight (0 = absent, 1 = present)
-        menarche: mother’s age at menarche (years)
-        mheigth: mother’s height (inches)
-        momage: mother’s age at delivery (years)
-        mrace: mother’s race (1 = White, 2 = Black, 3 = Asian, 4 = Puerto Rican, 8 = Other)
-        parity: number of live births prior to this pregnancy
-        pnumlbw: previous number of low birth weight babies
-        pnumgsa: number of prior small for gestational age babies
-        ppbmi: mother’s pre-pregnancy BMI
-        ppwt: mother’s pre-pregnancy weight (pounds)
-        smoken: average number of cigarettes smoked per day during pregnancy
-        wtgain: mother’s weight gain during pregnancy (pounds)
-        Load and clean the data for regression analysis (i.e. convert numeric to factor where appropriate, check for missing data, etc.).
 
 Propose a regression model for birthweight. This model may be based on a hypothesized structure for the factors that underly birthweight, on a data-driven model-building process, or a combination of the two. Describe your modeling process and show a plot of model residuals against fitted values -- use add_predictions and add_residuals in making this plot.
 
 Compare your model to two others:
 
-One using length at birth and gestational age as predictors (main effects only) One using head circumference, length, sex, and all interactions (including the three-way interaction) between these Make this comparison in terms of the cross-validated prediction error; use crossv_mc and functions in purrr as appropriate.
+**Model 1**: Predicts birth weight using length at birth and gestational age as predictors (main effects only).
+```{r}
+model_1 = glm(bwt ~ blength + gaweeks, data=birthweight)
+model_1 %>% broom::tidy()
+
+```
+
+**Model 2**: Predicts birth weight using head circumference, length, sex, and all interactions (including the three-way interaction) between these.
+```{r}
+model_2 = glm(bwt ~ bhead + blength + babysex + 
+                bhead*blength + blength*babysex + bhead*babysex + 
+                bhead*blength*babysex, data=birthweight)
+model_2 %>% broom::tidy()
+```
+
+Make this comparison in terms of the cross-validated prediction error; use crossv_mc and functions in purrr as appropriate.
 
 Note that although we expect your model to be reasonable, model building itself is not a main idea of the course and we don't necessarily expect your model to be "optimal".
