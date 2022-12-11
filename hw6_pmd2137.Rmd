@@ -197,7 +197,7 @@ city_odds_male_solved <- purrr::map_df(city_list, odds_male_solved)
 
 The graph below shows the odds of solving a homicide case for males compared to females, keeping all other demographic variables (race, age) constant in each city.
 
-```{r pressure, echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+```{r homicide_graph, echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
 
 # load the library
 library(forcats)
