@@ -2,7 +2,7 @@
 title: "Homework #6: Linear Models"
 author: "Pooja Desai (pmd2137)"
 date: "12/3/2022"
-output: html_document
+output: github_document
 editor_options: 
   chunk_output_type: inline
 ---
