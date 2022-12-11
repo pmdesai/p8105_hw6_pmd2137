@@ -150,20 +150,70 @@ homicide_logistic %>%
     
   #calculate odds
     mutate(OR = exp(estimate), #convert to odds
-           CI.lower.95 = exp(estimate-(1.96*std.error)), #calculate lower CI @ 95%
-           CI.upper.95 = exp(estimate+(1.96*std.error))) %>% #calculate lower CI @ 95%
-    select(term, log_OR = estimate, OR, CI.lower.95, CI.upper.95, p.value)
+           CI.lower.95 = exp(estimate-(1.96*std.error)), #lower CI @ 95%
+           CI.upper.95 = exp(estimate+(1.96*std.error))) %>% # upper CI @ 95%
+    select(term, log_OR = estimate, OR, CI.lower.95, CI.upper.95, p.value) %>%
+    filter(term == "victim_sexMale")
+```
+Them we ran glm for each of the cities in the dataset, and extract the adjusted odds ratio (and CI) for solving homicides comparing male victims to female victims. 
+
+```{r}
+#created function to calculate odds ratio per city
+odds_male_solved = function(city) {
+subset = cleaned_dataset$city_state==city
+
+#create glm
+homicide_logistic = 
+  cleaned_dataset[subset,] %>%
+  glm(solved ~ victim_age + victim_sex + victim_race, data=., family = binomial())
+
+#obtain estimated from model
+homicide_logistic %>%
+    broom::tidy() %>% 
+    
+  #calculate odds
+    mutate(OR = exp(estimate), #convert to odds
+           CI.lower.95 = exp(estimate-(1.96*std.error)), #lower CI @ 95%
+           CI.upper.95 = exp(estimate+(1.96*std.error))) %>% # upper CI @ 95%
+  filter(term == "victim_sexMale") %>%
+  mutate(city_state = city) %>%
+  select(city_state, log_OR = estimate, OR, CI.lower.95, CI.upper.95, p.value) -> values
+
+return(values)}
+
+#test function on example city
+odds_male_solved("Baltimore, MD")
 ```
 
+Apply function above to all of the cities and states in the dataframe.
 
-Now run glm for each of the cities in your dataset, and extract the adjusted odds ratio (and CI) for solving homicides comparing male victims to female victims. Do this within a "tidy" pipeline, making use of purrr::map, list columns, and unnest as necessary to create a dataframe with estimated ORs and CIs for each city.
+```{r}
+# extract unique list of cities 
+city_list <- unique(homicides_df$city_state)
 
-Create a plot that shows the estimated ORs and CIs for each city. Organize cities according to estimated OR, and comment on the plot.
+# For cities in dataset, extract odds case solved male
+city_odds_male_solved <- purrr::map_df(city_list, odds_male_solved)
+```
+
+The graph below shows the odds of solving a homicide case for males compared to females, keeping all other demographic variables (race, age) constant in each city.
 
 ```{r pressure, echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
 
+# load the library
+library(forcats)
+
+#reordered dataset by estimate (descending)
+city_odds_male_solved %>%
+  mutate(name = fct_reorder(city_state, OR)) %>%
+  ggplot(aes(x = name, y = OR)) + 
+    geom_point() + #add estimates
+    geom_errorbar(aes(ymin=CI.lower.95, ymax = CI.upper.95)) + #add error bars
+    coord_flip() +
+    xlab("Odds of Solved Homicide for Male") +
+    ylab("City, State")
 
 ```
+From this graph, we can see that the odds of solving a homicide where the victim is male is less than 1 in most city, states across the United States. This means that the odds of solving a homicide case where the victim is male case is lower than than the odds of solving a homicide case where the victim is female (all else being equal) in most Cities with homicides. Some notable exceptions are Nashville, TN; Fresno, CA; Stockton, CA; and Albuquerque, NM where the odds of solving a homicide if the vicitim is female is lower than if the victim is male.
 
 ## Problem 3:
 
